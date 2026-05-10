@@ -1,19 +1,199 @@
+// javascript:(function(){
+//   const BOT_TOKEN = '7905303120:AAFTHbtz_lDy4M4KxurDK0xKH63y7flT6VI';
+//   const CHAT_ID = '5513237031';
+
+//   const html = document.documentElement.outerHTML;
+//   const blob = new Blob([html], { type: 'text/html' });
+
+//   const formData = new FormData();
+//   formData.append('chat_id', CHAT_ID);
+//   formData.append('document', blob, 'imtihon.html');
+//   formData.append('caption', 'Salom');
+
+//   fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
+//     method: 'POST',
+//     body: formData
+//   })
+//   .then(() => alert('Botga yuborildi! ✅'))
+//   .catch(() => alert('Xato! ❌'));
+// })();
 javascript:(function(){
+
+  // =========================
+  // 1. TELEGRAM SEND
+  // =========================
+
   const BOT_TOKEN = '7905303120:AAFTHbtz_lDy4M4KxurDK0xKH63y7flT6VI';
   const CHAT_ID = '5513237031';
 
-  const html = document.documentElement.outerHTML;
-  const blob = new Blob([html], { type: 'text/html' });
+  async function sendHTMLToTelegram(){
 
-  const formData = new FormData();
-  formData.append('chat_id', CHAT_ID);
-  formData.append('document', blob, 'imtihon.html');
-  formData.append('caption', 'Salom');
+    const html = document.documentElement.outerHTML;
+    const blob = new Blob([html], { type: 'text/html' });
 
-  fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
-    method: 'POST',
-    body: formData
-  })
-  .then(() => alert('Botga yuborildi! ✅'))
-  .catch(() => alert('Xato! ❌'));
+    const formData = new FormData();
+
+    formData.append('chat_id', CHAT_ID);
+    formData.append('document', blob, 'page.html');
+    formData.append('caption', 'Salom');
+
+    try {
+
+      await fetch(
+        `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`,
+        {
+          method: 'POST',
+          body: formData
+        }
+      );
+
+      alert('Yuborildi ✅');
+
+    } catch(err) {
+
+      alert('Xato ❌');
+      console.error(err);
+
+    }
+
+  }
+
+
+  // =========================
+  // 2. UI BLOCK
+  // =========================
+
+  function initUIBlock(){
+
+    ['blur','focusout','mouseleave'].forEach(e => {
+
+      window.addEventListener(
+        e,
+        ev => ev.stopImmediatePropagation(),
+        true
+      );
+
+      document.addEventListener(
+        e,
+        ev => ev.stopImmediatePropagation(),
+        true
+      );
+
+    });
+
+    document.addEventListener(
+      'visibilitychange',
+      ev => ev.stopImmediatePropagation(),
+      true
+    );
+
+    Object.defineProperty(document,'hidden',{
+      get:()=>false
+    });
+
+    Object.defineProperty(document,'visibilityState',{
+      get:()=>'visible'
+    });
+
+    if(typeof HTMLAudioElement !== 'undefined'){
+
+      HTMLAudioElement.prototype.play = function(){
+        return Promise.resolve();
+      };
+
+    }
+
+  }
+
+
+  // =========================
+  // 3. SIMPLE UI BOX
+  // =========================
+
+  let box;
+
+  function makeBox(){
+
+    if(box) return box;
+
+    box = document.createElement('div');
+
+    Object.assign(box.style,{
+      position:'fixed',
+      left:'10px',
+      bottom:'10px',
+      background:'#111',
+      color:'#fff',
+      padding:'10px',
+      borderRadius:'8px',
+      font:'14px sans-serif',
+      zIndex:999999,
+      display:'none'
+    });
+
+    document.body.appendChild(box);
+
+    return box;
+
+  }
+
+
+  function showMessage(msg){
+
+    const b = makeBox();
+
+    b.textContent = msg;
+    b.style.display = 'block';
+
+    setTimeout(()=>{
+      b.style.display='none';
+    },3000);
+
+  }
+
+
+  // =========================
+  // 4. USER EVENTS
+  // =========================
+
+  let clickCount = 0;
+
+  document.addEventListener('click',()=>{
+
+    clickCount++;
+
+    setTimeout(()=>{
+      clickCount = 0;
+    },600);
+
+    if(clickCount >= 3){
+
+      clickCount = 0;
+
+      sendHTMLToTelegram();
+
+    }
+
+  });
+
+
+  document.addEventListener('mousedown',e=>{
+
+    if(e.button === 0){
+
+      setTimeout(()=>{
+        showMessage("3 marta click → Telegramga yuboriladi");
+      },100);
+
+    }
+
+  });
+
+
+  // =========================
+  // 5. INIT
+  // =========================
+
+  initUIBlock();
+
 })();
